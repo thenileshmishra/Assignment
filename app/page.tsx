@@ -1,7 +1,7 @@
 import OrderbookViewer from './components/OrderbookViewer';
 import VenueSwitcher from './components/VenueSwitcher';
 import MarketDepth from './components/MarketDepth';
-import ClientOnly from './components/ClientOnly';
+import { useOrderbookStore } from '@/store/orderbook';
 
 export default function Home() {
   return (
@@ -17,21 +17,11 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Real-time components wrapped in ClientOnly */}
-        <ClientOnly
-          fallback={
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-              <p className="text-gray-600 dark:text-gray-400">Loading orderbook data...</p>
-            </div>
-          }
-        >
-          {/* Venue Switcher */}
-          <VenueSwitcher />
+        {/* Venue Switcher */}
+        <VenueSwitcher />
 
-          {/* Main Content */}
-          <OrderbookViewer />
-        </ClientOnly>
+        {/* Main Content */}
+        <OrderbookViewer />
       </div>
     </div>
   );

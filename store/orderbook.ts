@@ -16,12 +16,10 @@ interface State {
   connectionStatus: ConnectionStatus;
   error: string | null;
   connectionType: 'websocket' | 'rest' | null;
-  isInitialized: boolean;
   connect: () => void;
   disconnect: () => void;
   setVenue: (v: Venue) => void;
   setSymbol: (s: string) => void;
-  initialize: () => void;
 }
 
 // singletons – create once, reuse
@@ -49,14 +47,6 @@ export const useOrderbookStore = create<State>((set, get) => ({
   connectionStatus: 'disconnected',
   error: null,
   connectionType: null,
-  isInitialized: false,
-
-  initialize() {
-    if (!get().isInitialized) {
-      set({ isInitialized: true });
-      get().connect();
-    }
-  },
 
   connect() {
     const { venue, symbol } = get();
