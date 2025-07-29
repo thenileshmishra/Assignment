@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useOrderbookStore } from '@/store/orderbook';
 import SimulationForm from './SimulationForm';
 import OrderSimulation from './OrderSimulation';
+import MarketDepth from './MarketDepth';
+import OrderBookImbalance from './OrderBookImbalance';
 import { Level } from '@/services/exchange/types';
 
 interface SimulatedOrder {
@@ -216,6 +218,16 @@ export default function OrderbookViewer() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Market Depth Visualization */}
+      <div className="mt-6">
+        <MarketDepth orderbook={data} />
+      </div>
+
+      {/* Order Book Imbalance */}
+      <div className="mt-6">
+        <OrderBookImbalance orderbook={data} />
       </div>
     </div>
   );

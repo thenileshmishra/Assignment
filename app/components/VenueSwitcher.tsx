@@ -3,7 +3,7 @@
 import { useOrderbookStore } from '@/store/orderbook';
 
 export default function VenueSwitcher() {
-  const { venue, setVenue } = useOrderbookStore();
+  const { venue, connectionStatus, error, setVenue } = useOrderbookStore();
 
   const venues = [
     { id: 'OKX', name: 'OKX', color: 'bg-blue-500' },
@@ -11,9 +11,42 @@ export default function VenueSwitcher() {
     { id: 'DERIBIT', name: 'Deribit', color: 'bg-purple-500' },
   ] as const;
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'connected': return 'bg-green-500';
+      case 'connecting': return 'bg-yellow-500';
+      case 'error': return 'bg-red-500';
+      default: return 'bg-gray-400';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'connected': return 'Connected';
+      case 'connecting': return 'Connecting...';
+      case 'error': return 'Error';
+      default: return 'Disconnected';
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-6">
-      <h3 className="text-lg font-semibold mb-4">Select Venue</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold">Select Venue</h3>
+        <div className="flex items-center space-x-2">
+          <div className={`w-2 h-2 rounded-full ${getStatusColor(connectionStatus)}`} />
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            {getStatusText(connectionStatus)}
+          </span>
+        </div>
+      </div>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+          <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-3 gap-3">
         {venues.map(({ id, name, color }) => (
           <button
