@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useOrderbookStore } from '@/store/orderbook';
 import SimulationForm from './SimulationForm';
+import OrderSimulation from './OrderSimulation';
 import { Level } from '@/services/exchange/types';
 
 interface SimulatedOrder {
@@ -99,10 +100,25 @@ export default function OrderbookViewer() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Order Simulation Form */}
         <div className="lg:col-span-1">
-          <SimulationForm />
+          <SimulationForm onSimulateOrder={addSimulatedOrder} />
           
           {/* Simulated Orders List */}
-          {/* (Simulated orders UI will be implemented later) */}
+          {simulatedOrders.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold mb-3">Simulated Orders</h3>
+              <div className="space-y-2">
+                {simulatedOrders.map(order => (
+                  <OrderSimulation
+                    key={order.id}
+                    order={order}
+                    orderbook={data}
+                    onRemove={() => removeSimulatedOrder(order.id)}
+                    impact={calculateOrderImpact(order, data)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Orderbook Display */}
@@ -199,8 +215,8 @@ export default function OrderbookViewer() {
               </div>
             </div>
           </div>
+        </div>
       </div>
-    </div>
     </div>
   );
 }

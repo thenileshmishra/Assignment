@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -12,7 +12,7 @@ const schema = z.object({
   orderType:  z.enum(['MARKET', 'LIMIT']),
   side:       z.enum(['BUY', 'SELL']),
   price:      z.number().positive().optional(),        // only for LIMIT
-  qty:        z.number().positive('Qty > 0'),
+  qty:        z.number().positive('Qty > 0'),
   delay:      z.enum(['0', '5', '10', '30']),          // seconds
 }).refine(d => d.orderType === 'MARKET' || d.price !== undefined, {
   message: 'Price required for limit order',
@@ -21,10 +21,16 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-export default function SimulationForm() {
-  const { venue, symbol, setVenue, setSymbol } = useOrderbookStore();
+interface SimulationFormProps {
+  onSimulateOrder: (order: Omit<FormData, 'delay'>) => void;
+}
 
-  const { register, handleSubmit, watch, setValue, formState: { errors } } =
+export default function SimulationForm({ onSimulateOrder }: SimulationFormProps) {
+  const { venue, symbol, setVenue, setSymbol } = useOrderbookStore();
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [simulationStatus, setSimulationStatus] = useState<string>('');
+
+  const { register, handleSubmit, watch, setValue, formState: { errors }, reset } =
     useForm<FormData>({
       resolver: zodResolver(schema),
       defaultValues: {
@@ -46,94 +52,164 @@ export default function SimulationForm() {
     return () => sub.unsubscribe();
   }, [watch, setVenue, setSymbol]);
 
-  const onSubmit = (data: FormData) => {
-    // ↓ replace with your simulateOrder() util
-    console.log('simulate', data);
+  const onSubmit = async (data: FormData) => {
+    setIsSimulating(true);
+    setSimulationStatus(`Preparing to simulate ${data.delay === '0' ? 'immediate' : `${data.delay}s delayed`} order...`);
+
     const delayMs = Number(data.delay) * 1000;
+    
     setTimeout(() => {
-      // dispatch to simulation slice / overlay marker here
+      setSimulationStatus('Executing order simulation...');
+      
+      // Simulate the order
+      const { delay, ...orderData } = data;
+      onSimulateOrder(orderData);
+      
+      setSimulationStatus('Order simulation completed!');
+      setIsSimulating(false);
+      
+      // Reset form after successful simulation
+      setTimeout(() => {
+        setSimulationStatus('');
+        reset();
+      }, 2000);
     }, delayMs);
   };
 
   const isLimit = watch('orderType') === 'LIMIT';
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 p-4 border rounded">
-      {/* line‑1: venue / symbol */}
-      <div className="flex gap-2">
-        <select {...register('venue')} className="border p-1 rounded">
-          <option value="OKX">OKX</option>
-          <option value="BYBIT">Bybit</option>
-          <option value="DERIBIT">Deribit</option>
-        </select>
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <h3 className="text-lg font-semibold mb-4">Order Simulation</h3>
+      
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {/* Venue and Symbol */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium mb-1">Venue</label>
+            <select 
+              {...register('venue')} 
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="OKX">OKX</option>
+              <option value="BYBIT">Bybit</option>
+              <option value="DERIBIT">Deribit</option>
+            </select>
+          </div>
 
-        <input
-          {...register('symbol')}
-          placeholder="BTC-USDT"
-          className="border p-1 rounded w-32 uppercase"
-        />
-      </div>
-
-      {/* line‑2: type / side */}
-      <div className="flex gap-2">
-        <select {...register('orderType')} className="border p-1 rounded">
-          <option value="MARKET">Market</option>
-          <option value="LIMIT">Limit</option>
-        </select>
-
-        <select {...register('side')} className="border p-1 rounded">
-          <option value="BUY">Buy</option>
-          <option value="SELL">Sell</option>
-        </select>
-      </div>
-
-      {/* line‑3: price / qty */}
-      <div className="flex gap-2">
-        <input
-          type="number"
-          step="0.01"
-          {...register('price', { valueAsNumber: true })}
-          disabled={!isLimit}
-          placeholder="Price"
-          className={`border p-1 rounded w-28 ${!isLimit && 'opacity-40'}`}
-        />
-        <input
-          type="number"
-          step="0.0001"
-          {...register('qty', { valueAsNumber: true })}
-          placeholder="Qty"
-          className="border p-1 rounded w-24"
-        />
-      </div>
-
-      {/* line‑4: timing */}
-      <div className="flex gap-2">
-        {['0','5','10','30'].map(s => (
-          <label key={s} className="flex items-center gap-1">
+          <div>
+            <label className="block text-sm font-medium mb-1">Symbol</label>
             <input
-              type="radio"
-              value={s}
-              {...register('delay')}
-              defaultChecked={s==='0'}
+              {...register('symbol')}
+              placeholder="BTC-USDT"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
             />
-            {s === '0' ? 'Immediate' : `${s}s`}
-          </label>
-        ))}
-      </div>
+          </div>
+        </div>
 
-      {/* validation errors */}
-      {Object.values(errors).length > 0 && (
-        <p className="text-red-600 text-xs">
-          {Object.values(errors)[0]?.message?.toString()}
-        </p>
-      )}
+        {/* Order Type and Side */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium mb-1">Order Type</label>
+            <select 
+              {...register('orderType')} 
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="MARKET">Market</option>
+              <option value="LIMIT">Limit</option>
+            </select>
+          </div>
 
-      <button
-        type="submit"
-        className="bg-blue-600 text-white px-4 py-1 rounded"
-      >
-        Simulate
-      </button>
-    </form>
+          <div>
+            <label className="block text-sm font-medium mb-1">Side</label>
+            <select 
+              {...register('side')} 
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="BUY">Buy</option>
+              <option value="SELL">Sell</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Price and Quantity */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium mb-1">Price</label>
+            <input
+              type="number"
+              step="0.01"
+              {...register('price', { valueAsNumber: true })}
+              disabled={!isLimit}
+              placeholder="Price"
+              className={`w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                !isLimit && 'opacity-50 cursor-not-allowed'
+              }`}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Quantity</label>
+            <input
+              type="number"
+              step="0.0001"
+              {...register('qty', { valueAsNumber: true })}
+              placeholder="Qty"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        {/* Timing Simulation */}
+        <div>
+          <label className="block text-sm font-medium mb-2">Timing Simulation</label>
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { value: '0', label: 'Immediate' },
+              { value: '5', label: '5s Delay' },
+              { value: '10', label: '10s Delay' },
+              { value: '30', label: '30s Delay' }
+            ].map(({ value, label }) => (
+              <label key={value} className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="radio"
+                  value={value}
+                  {...register('delay')}
+                  defaultChecked={value === '0'}
+                  className="text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm">{label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Validation errors */}
+        {Object.values(errors).length > 0 && (
+          <div className="text-red-600 text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-md">
+            {Object.values(errors)[0]?.message?.toString()}
+          </div>
+        )}
+
+        {/* Simulation Status */}
+        {simulationStatus && (
+          <div className="text-blue-600 text-sm bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md">
+            {simulationStatus}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={isSimulating}
+          className={`w-full py-2 px-4 rounded-md font-medium transition-colors ${
+            isSimulating
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-blue-600 hover:bg-blue-700 text-white'
+          }`}
+        >
+          {isSimulating ? 'Simulating...' : 'Simulate Order'}
+        </button>
+      </form>
+    </div>
   );
 }
