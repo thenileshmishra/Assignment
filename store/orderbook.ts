@@ -28,6 +28,17 @@ const adapters = {
   DERIBIT: new DeribitAdapter(),
 };
 
+// Default symbols for each venue
+const defaultSymbols = {
+  OKX: 'BTC-USDT',
+  BYBIT: 'BTC-USDT',
+  DERIBIT: 'BTC-USDT', // Will be converted to BTC-PERPETUAL
+};
+
+// Debounce function to limit update frequency
+let updateTimeout: NodeJS.Timeout | null = null;
+const DEBOUNCE_DELAY = 100; // 100ms debounce
+
 export const useOrderbookStore = create<State>((set, get) => ({
   venue: 'OKX',
   symbol: 'BTC-USDT',
@@ -41,12 +52,20 @@ export const useOrderbookStore = create<State>((set, get) => ({
     
     try {
       adapters[venue].connect(symbol, (ob) => {
-        set({ data: ob, connectionStatus: 'connected', error: null });
+        // Debounce updates to prevent excessive re-renders
+        if (updateTimeout) {
+          clearTimeout(updateTimeout);
+        }
+        
+        updateTimeout = setTimeout(() => {
+          set({ data: ob, connectionStatus: 'connected', error: null });
+        }, DEBOUNCE_DELAY);
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Connection failed';
       set({ 
         connectionStatus: 'error', 
-        error: error instanceof Error ? error.message : 'Connection failed' 
+        error: `${venue} connection error: ${errorMessage}` 
       });
     }
   },
@@ -54,12 +73,16 @@ export const useOrderbookStore = create<State>((set, get) => ({
   disconnect() {
     const { venue } = get();
     adapters[venue].disconnect();
-    set({ connectionStatus: 'disconnected' });
+    if (updateTimeout) {
+      clearTimeout(updateTimeout);
+      updateTimeout = null;
+    }
+    set({ connectionStatus: 'disconnected', error: null });
   },
 
   setVenue(v) {
     get().disconnect();
-    set({ venue: v }, false);   // shallow
+    set({ venue: v, symbol: defaultSymbols[v] }, false);   // Update symbol for new venue
     get().connect();
   },
 

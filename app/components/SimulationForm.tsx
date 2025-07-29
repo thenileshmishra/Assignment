@@ -7,7 +7,6 @@ import * as z from 'zod';
 import { useOrderbookStore } from '@/store/orderbook';
 
 const schema = z.object({
-  venue:      z.enum(['OKX', 'BYBIT', 'DERIBIT']),
   symbol:     z.string().min(3, 'Required').toUpperCase(),
   orderType:  z.enum(['MARKET', 'LIMIT']),
   side:       z.enum(['BUY', 'SELL']),
@@ -22,11 +21,11 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 interface SimulationFormProps {
-  onSimulateOrder: (order: Omit<FormData, 'delay'>) => void;
+  onSimulateOrder: (order: Omit<FormData, 'delay'> & { venue: string }) => void;
 }
 
 export default function SimulationForm({ onSimulateOrder }: SimulationFormProps) {
-  const { venue, symbol, setVenue, setSymbol } = useOrderbookStore();
+  const { venue, symbol, setSymbol } = useOrderbookStore();
   const [isSimulating, setIsSimulating] = useState(false);
   const [simulationStatus, setSimulationStatus] = useState<string>('');
 
@@ -34,7 +33,6 @@ export default function SimulationForm({ onSimulateOrder }: SimulationFormProps)
     useForm<FormData>({
       resolver: zodResolver(schema),
       defaultValues: {
-        venue,
         symbol,
         orderType: 'MARKET',
         side: 'BUY',
@@ -43,14 +41,13 @@ export default function SimulationForm({ onSimulateOrder }: SimulationFormProps)
       },
     });
 
-  /* sync dropdown changes back to global store */
+  /* sync symbol changes back to global store */
   useEffect(() => {
-    const sub = watch(({ venue, symbol }) => {
-      if (venue)  setVenue(venue);
+    const sub = watch(({ symbol }) => {
       if (symbol) setSymbol(symbol);
     });
     return () => sub.unsubscribe();
-  }, [watch, setVenue, setSymbol]);
+  }, [watch, setSymbol]);
 
   const onSubmit = async (data: FormData) => {
     setIsSimulating(true);
@@ -61,9 +58,9 @@ export default function SimulationForm({ onSimulateOrder }: SimulationFormProps)
     setTimeout(() => {
       setSimulationStatus('Executing order simulation...');
       
-      // Simulate the order
+      // Simulate the order with current venue
       const { delay, ...orderData } = data;
-      onSimulateOrder(orderData);
+      onSimulateOrder({ ...orderData, venue });
       
       setSimulationStatus('Order simulation completed!');
       setIsSimulating(false);
@@ -83,28 +80,19 @@ export default function SimulationForm({ onSimulateOrder }: SimulationFormProps)
       <h3 className="text-lg font-semibold mb-4">Order Simulation</h3>
       
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Venue and Symbol */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-sm font-medium mb-1">Venue</label>
-            <select 
-              {...register('venue')} 
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="OKX">OKX</option>
-              <option value="BYBIT">Bybit</option>
-              <option value="DERIBIT">Deribit</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Symbol</label>
-            <input
-              {...register('symbol')}
-              placeholder="BTC-USDT"
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
-            />
-          </div>
+        {/* Symbol Selection */}
+        <div>
+          <label className="block text-sm font-medium mb-1">Symbol</label>
+          <select
+            {...register('symbol')}
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+          >
+            <option value="BTC-USDT">BTC-USDT</option>
+            <option value="ETH-USDT">ETH-USDT</option>
+            <option value="SOL-USDT">SOL-USDT</option>
+            <option value="ADA-USDT">ADA-USDT</option>
+            <option value="DOT-USDT">DOT-USDT</option>
+          </select>
         </div>
 
         {/* Order Type and Side */}
@@ -181,6 +169,16 @@ export default function SimulationForm({ onSimulateOrder }: SimulationFormProps)
                 <span className="text-sm">{label}</span>
               </label>
             ))}
+          </div>
+        </div>
+
+        {/* Current Venue Display */}
+        <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Current Venue: <span className="font-semibold text-gray-900 dark:text-white">{venue}</span>
+          </div>
+          <div className="text-xs text-gray-500 mt-1">
+            Switch venue using the selector above
           </div>
         </div>
 

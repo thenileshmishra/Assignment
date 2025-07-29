@@ -70,7 +70,7 @@ export default function MarketDepth({ orderbook, maxLevels = 15 }: MarketDepthPr
               const widthPercentage = (level.cumulativeVolume / maxVolume) * 100;
               return (
                 <div key={`ask-${index}`} className="flex items-center space-x-2">
-                  <div className="w-16 text-xs font-mono text-red-600">
+                  <div className="w-20 text-xs font-mono text-red-600">
                     {level.price.toFixed(2)}
                   </div>
                   <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-4 relative">
@@ -79,8 +79,8 @@ export default function MarketDepth({ orderbook, maxLevels = 15 }: MarketDepthPr
                       style={{ width: `${widthPercentage}%` }}
                     />
                     <div className="absolute inset-0 flex items-center justify-between px-2 text-xs text-white font-medium">
-                      <span>{level.size.toFixed(4)}</span>
-                      <span>{level.cumulativeVolume.toFixed(4)}</span>
+                      <span className="w-12 text-right">{level.size.toFixed(4)}</span>
+                      <span className="w-16 text-right">{level.cumulativeVolume.toFixed(4)}</span>
                     </div>
                   </div>
                 </div>
@@ -97,7 +97,7 @@ export default function MarketDepth({ orderbook, maxLevels = 15 }: MarketDepthPr
               const widthPercentage = (level.cumulativeVolume / maxVolume) * 100;
               return (
                 <div key={`bid-${index}`} className="flex items-center space-x-2">
-                  <div className="w-16 text-xs font-mono text-green-600">
+                  <div className="w-20 text-xs font-mono text-green-600">
                     {level.price.toFixed(2)}
                   </div>
                   <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-4 relative">
@@ -106,8 +106,8 @@ export default function MarketDepth({ orderbook, maxLevels = 15 }: MarketDepthPr
                       style={{ width: `${widthPercentage}%` }}
                     />
                     <div className="absolute inset-0 flex items-center justify-between px-2 text-xs text-white font-medium">
-                      <span>{level.size.toFixed(4)}</span>
-                      <span>{level.cumulativeVolume.toFixed(4)}</span>
+                      <span className="w-12 text-right">{level.size.toFixed(4)}</span>
+                      <span className="w-16 text-right">{level.cumulativeVolume.toFixed(4)}</span>
                     </div>
                   </div>
                 </div>
@@ -121,19 +121,19 @@ export default function MarketDepth({ orderbook, maxLevels = 15 }: MarketDepthPr
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-gray-600 dark:text-gray-400">Best Ask:</span>
-              <span className="ml-2 font-mono text-red-600">
+              <span className="ml-2 font-mono text-red-600 w-20 inline-block">
                 {asks[0]?.price.toFixed(2) || 'N/A'}
               </span>
             </div>
             <div>
               <span className="text-gray-600 dark:text-gray-400">Best Bid:</span>
-              <span className="ml-2 font-mono text-green-600">
+              <span className="ml-2 font-mono text-green-600 w-20 inline-block">
                 {bids[0]?.price.toFixed(2) || 'N/A'}
               </span>
             </div>
             <div>
               <span className="text-gray-600 dark:text-gray-400">Spread:</span>
-              <span className="ml-2 font-mono">
+              <span className="ml-2 font-mono w-20 inline-block">
                 {asks[0] && bids[0] 
                   ? (asks[0].price - bids[0].price).toFixed(2)
                   : 'N/A'
@@ -142,7 +142,7 @@ export default function MarketDepth({ orderbook, maxLevels = 15 }: MarketDepthPr
             </div>
             <div>
               <span className="text-gray-600 dark:text-gray-400">Spread %:</span>
-              <span className="ml-2 font-mono">
+              <span className="ml-2 font-mono w-20 inline-block">
                 {asks[0] && bids[0] 
                   ? (((asks[0].price - bids[0].price) / bids[0].price) * 100).toFixed(3) + '%'
                   : 'N/A'

@@ -24,3 +24,37 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Layout stability improvements */
+.orderbook-table {
+  contain: layout style;
+}
+
+.orderbook-cell {
+  contain: layout style;
+  min-width: 0;
+}
+
+/* Prevent layout shifts for numbers */
+.number-display {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Smooth transitions for updates */
+.orderbook-row {
+  transition: background-color 0.1s ease;
+}
+
+/* Fixed width containers */
+.fixed-width {
+  width: fit-content;
+  min-width: max-content;
+}
+
+/* Prevent text wrapping in tables */
+.table-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

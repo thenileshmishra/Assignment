@@ -144,12 +144,12 @@ export default function OrderbookViewer() {
                   <h3 className="text-red-600 font-semibold">Asks</h3>
                 </div>
                 <div className="max-h-96 overflow-y-auto">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-sm orderbook-table">
                     <thead className="bg-gray-50 dark:bg-gray-700">
                       <tr>
-                        <th className="px-4 py-2 text-left">Price</th>
-                        <th className="px-4 py-2 text-right">Size</th>
-                        <th className="px-4 py-2 text-right">Total</th>
+                        <th className="px-4 py-2 text-left w-1/3 table-cell">Price</th>
+                        <th className="px-4 py-2 text-right w-1/3 table-cell">Size</th>
+                        <th className="px-4 py-2 text-right w-1/3 table-cell">Total</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -159,14 +159,14 @@ export default function OrderbookViewer() {
                           .reduce((sum, l) => sum + l.size, 0);
                         
                         return (
-                          <tr key={`ask-${level.price}`} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <td className="px-4 py-2 text-red-600 font-mono">
+                          <tr key={`ask-${level.price}`} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 orderbook-row">
+                            <td className="px-4 py-2 text-red-600 font-mono text-sm orderbook-cell number-display">
                               {level.price.toFixed(2)}
                             </td>
-                            <td className="px-4 py-2 text-right font-mono">
+                            <td className="px-4 py-2 text-right font-mono text-sm orderbook-cell number-display">
                               {level.size.toFixed(4)}
                             </td>
-                            <td className="px-4 py-2 text-right text-gray-500 font-mono">
+                            <td className="px-4 py-2 text-right text-gray-500 font-mono text-sm orderbook-cell number-display">
                               {total.toFixed(4)}
                             </td>
                           </tr>
@@ -183,12 +183,12 @@ export default function OrderbookViewer() {
                   <h3 className="text-green-600 font-semibold">Bids</h3>
                 </div>
                 <div className="max-h-96 overflow-y-auto">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-sm orderbook-table">
                     <thead className="bg-gray-50 dark:bg-gray-700">
                       <tr>
-                        <th className="px-4 py-2 text-left">Price</th>
-                        <th className="px-4 py-2 text-right">Size</th>
-                        <th className="px-4 py-2 text-right">Total</th>
+                        <th className="px-4 py-2 text-left w-1/3 table-cell">Price</th>
+                        <th className="px-4 py-2 text-right w-1/3 table-cell">Size</th>
+                        <th className="px-4 py-2 text-right w-1/3 table-cell">Total</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -198,14 +198,14 @@ export default function OrderbookViewer() {
                           .reduce((sum, l) => sum + l.size, 0);
                         
                         return (
-                          <tr key={`bid-${level.price}`} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <td className="px-4 py-2 text-green-600 font-mono">
+                          <tr key={`bid-${level.price}`} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 orderbook-row">
+                            <td className="px-4 py-2 text-green-600 font-mono text-sm orderbook-cell number-display">
                               {level.price.toFixed(2)}
                             </td>
-                            <td className="px-4 py-2 text-right font-mono">
+                            <td className="px-4 py-2 text-right font-mono text-sm orderbook-cell number-display">
                               {level.size.toFixed(4)}
                             </td>
-                            <td className="px-4 py-2 text-right text-gray-500 font-mono">
+                            <td className="px-4 py-2 text-right text-gray-500 font-mono text-sm orderbook-cell number-display">
                               {total.toFixed(4)}
                             </td>
                           </tr>

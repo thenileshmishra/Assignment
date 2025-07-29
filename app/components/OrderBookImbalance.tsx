@@ -104,13 +104,13 @@ export default function OrderBookImbalance({ orderbook, levels = 10 }: OrderBook
           <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm text-gray-600 dark:text-gray-400">Ratio:</span>
-              <span className={`font-mono font-semibold ${getImbalanceColor(volumeImbalance + 0.5)}`}>
+              <span className={`font-mono font-semibold w-16 text-right ${getImbalanceColor(volumeImbalance + 0.5)}`}>
                 {((volumeImbalance + 0.5) * 100).toFixed(1)}%
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600 dark:text-gray-400">Status:</span>
-              <span className={`text-sm font-medium ${getImbalanceColor(volumeImbalance + 0.5)}`}>
+              <span className={`text-sm font-medium w-20 text-right ${getImbalanceColor(volumeImbalance + 0.5)}`}>
                 {getImbalanceText(volumeImbalance + 0.5)}
               </span>
             </div>
@@ -123,13 +123,13 @@ export default function OrderBookImbalance({ orderbook, levels = 10 }: OrderBook
           <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm text-gray-600 dark:text-gray-400">Bid Pressure:</span>
-              <span className={`font-mono font-semibold ${getImbalanceColor(pressureRatio)}`}>
+              <span className={`font-mono font-semibold w-16 text-right ${getImbalanceColor(pressureRatio)}`}>
                 {(pressureRatio * 100).toFixed(1)}%
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600 dark:text-gray-400">Status:</span>
-              <span className={`text-sm font-medium ${getImbalanceColor(pressureRatio)}`}>
+              <span className={`text-sm font-medium w-20 text-right ${getImbalanceColor(pressureRatio)}`}>
                 {getImbalanceText(pressureRatio)}
               </span>
             </div>
@@ -142,11 +142,11 @@ export default function OrderBookImbalance({ orderbook, levels = 10 }: OrderBook
           <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm text-gray-600 dark:text-gray-400">Spread:</span>
-              <span className="font-mono">{spread.toFixed(2)}</span>
+              <span className="font-mono w-16 text-right">{spread.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600 dark:text-gray-400">Spread %:</span>
-              <span className="font-mono">{spreadPercentage.toFixed(3)}%</span>
+              <span className="font-mono w-16 text-right">{spreadPercentage.toFixed(3)}%</span>
             </div>
           </div>
         </div>
@@ -157,11 +157,11 @@ export default function OrderBookImbalance({ orderbook, levels = 10 }: OrderBook
           <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm text-gray-600 dark:text-gray-400">Bid Levels:</span>
-              <span className="font-mono text-green-600">{bidDepth}</span>
+              <span className="font-mono text-green-600 w-8 text-right">{bidDepth}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600 dark:text-gray-400">Ask Levels:</span>
-              <span className="font-mono text-red-600">{askDepth}</span>
+              <span className="font-mono text-red-600 w-8 text-right">{askDepth}</span>
             </div>
           </div>
         </div>
@@ -172,15 +172,15 @@ export default function OrderBookImbalance({ orderbook, levels = 10 }: OrderBook
         <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Volume Summary</h4>
         <div className="grid grid-cols-3 gap-4 text-sm">
           <div className="text-center">
-            <div className="text-green-600 font-semibold">{bidVolume.toFixed(4)}</div>
+            <div className="text-green-600 font-semibold w-20 mx-auto">{bidVolume.toFixed(4)}</div>
             <div className="text-gray-500 text-xs">Bid Volume</div>
           </div>
           <div className="text-center">
-            <div className="text-red-600 font-semibold">{askVolume.toFixed(4)}</div>
+            <div className="text-red-600 font-semibold w-20 mx-auto">{askVolume.toFixed(4)}</div>
             <div className="text-gray-500 text-xs">Ask Volume</div>
           </div>
           <div className="text-center">
-            <div className="font-semibold">{totalVolume.toFixed(4)}</div>
+            <div className="font-semibold w-20 mx-auto">{totalVolume.toFixed(4)}</div>
             <div className="text-gray-500 text-xs">Total Volume</div>
           </div>
         </div>
