@@ -7,6 +7,7 @@ import OrderSimulation from './OrderSimulation';
 import MarketDepth from './MarketDepth';
 import OrderBookImbalance from './OrderBookImbalance';
 import { Level } from '@/services/exchange/types';
+import clsx from 'clsx';
 
 interface SimulatedOrder {
   id: string;
@@ -89,6 +90,9 @@ export default function OrderbookViewer() {
     };
   };
 
+  // Find the price levels for simulated orders
+  const simulatedOrderPrices = simulatedOrders.map(o => o.price).filter(Boolean);
+
   if (!data) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -108,7 +112,7 @@ export default function OrderbookViewer() {
           {simulatedOrders.length > 0 && (
             <div className="mt-6">
               <h3 className="text-lg font-semibold mb-3">Simulated Orders</h3>
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {simulatedOrders.map(order => (
                   <OrderSimulation
                     key={order.id}
@@ -157,9 +161,12 @@ export default function OrderbookViewer() {
                         const total = data.asks
                           .slice(0, index + 1)
                           .reduce((sum, l) => sum + l.size, 0);
-                        
+                        const isSimOrder = simulatedOrderPrices.includes(level.price);
                         return (
-                          <tr key={`ask-${level.price}`} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 orderbook-row">
+                          <tr key={`ask-${level.price}`} className={clsx(
+                            'border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 orderbook-row',
+                            isSimOrder ? 'bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-400' : ''
+                          )}>
                             <td className="px-4 py-2 text-red-600 font-mono text-sm orderbook-cell number-display">
                               {level.price.toFixed(2)}
                             </td>

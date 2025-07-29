@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { OrderBookSnapshot } from '@/services/exchange/types';
+import clsx from 'clsx';
 
 interface SimulatedOrder {
   id: string;
@@ -52,53 +53,42 @@ export default function OrderSimulation({ order, orderbook, onRemove, impact }: 
   const isMarketOrder = order.orderType === 'MARKET';
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-3">
-      {/* Order Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className={`w-3 h-3 rounded-full ${
-            order.side === 'BUY' ? 'bg-green-500' : 'bg-red-500'
-          }`} />
-          <span className="font-semibold text-sm">
-            {order.side} {order.qty} {order.symbol}
-          </span>
-          <span className={`text-xs px-2 py-1 rounded ${
-            order.orderType === 'MARKET' 
-              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-              : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-          }`}>
-            {order.orderType}
-          </span>
+    <div className={clsx(
+      'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4',
+      impact && impact.fillPercentage < 100 ? 'border-yellow-400' : ''
+    )}>
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-sm font-semibold">
+            {order.side} {order.qty} {order.symbol} ({order.orderType})
+          </div>
+          {order.orderType === 'LIMIT' && (
+            <div className="text-xs text-gray-500">Limit Price: {order.price}</div>
+          )}
         </div>
         <button
+          className="text-xs text-red-500 hover:underline"
           onClick={onRemove}
-          className="text-gray-400 hover:text-red-500 text-sm"
         >
-          ×
+          Remove
         </button>
       </div>
 
-      {/* Order Details */}
-      <div className="space-y-2 text-sm">
-        <div className="flex justify-between">
-          <span className="text-gray-600 dark:text-gray-400">Venue:</span>
-          <span>{order.venue}</span>
+      {/* Slippage Warning */}
+      {impact && impact.slippage > 0.5 && (
+        <div className="mt-2 p-2 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-400 rounded text-yellow-800 dark:text-yellow-200 text-xs font-semibold">
+          Warning: High slippage ({impact.slippage.toFixed(2)}%)
         </div>
-        {order.price && (
-          <div className="flex justify-between">
-            <span className="text-gray-600 dark:text-gray-400">Price:</span>
-            <span className="font-mono">{order.price.toFixed(2)}</span>
-          </div>
-        )}
-        <div className="flex justify-between">
-          <span className="text-gray-600 dark:text-gray-400">Quantity:</span>
-          <span className="font-mono">{order.qty.toFixed(4)}</span>
+      )}
+
+      {/* Time to Fill Estimate */}
+      {impact && (
+        <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+          Time to Fill: <span className="font-semibold">
+            {impact.fillPercentage === 100 ? 'Immediate' : impact.totalFilled > 0 ? 'Partial Fill' : 'Unfilled'}
+          </span>
         </div>
-        <div className="flex justify-between">
-          <span className="text-gray-600 dark:text-gray-400">Time:</span>
-          <span>{new Date(order.timestamp).toLocaleTimeString()}</span>
-        </div>
-      </div>
+      )}
 
       {/* Impact Metrics */}
       {impact && (
