@@ -31,7 +31,7 @@ const adapters = {
 // Default symbols for each venue
 const defaultSymbols = {
   OKX: 'BTC-USDT',
-  BYBIT: 'BTC-USDT',
+  BYBIT: 'BTC-USDT', // Will be converted to BTCUSDT
   DERIBIT: 'BTC-USDT', // Will be converted to BTC-PERPETUAL
 };
 

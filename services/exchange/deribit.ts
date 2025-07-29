@@ -10,6 +10,8 @@ export class DeribitAdapter implements ExchangeAdapter {
     const baseSymbol = symbol.split('-')[0]; // Get BTC from BTC-USDT
     const deribitSymbol = `${baseSymbol}-PERPETUAL`;
     
+    console.log(`Deribit: Connecting with symbol: ${deribitSymbol}`);
+    
     const subMsg = {
       jsonrpc: '2.0',
       id: 42,
@@ -19,12 +21,15 @@ export class DeribitAdapter implements ExchangeAdapter {
       },
     };
 
+    console.log('Deribit: Subscription message:', subMsg);
+
     this.#close = createWsClient(
       'wss://www.deribit.com/ws/api/v2',
       subMsg,
       (evt) => {
         try {
           const msg = JSON.parse(evt.data);
+          console.log('Deribit: Received message:', msg);
           
           // Handle subscription confirmation
           if (msg.id === 42) {
@@ -32,10 +37,18 @@ export class DeribitAdapter implements ExchangeAdapter {
             return;
           }
           
-          if (msg.method !== 'subscription') return;
+          if (msg.method !== 'subscription') {
+            console.log('Deribit: Ignoring message method:', msg.method);
+            return;
+          }
 
           const book = msg.params?.data;
-          if (!book || !book.bids || !book.asks) return;
+          if (!book || !book.bids || !book.asks) {
+            console.log('Deribit: Invalid book data');
+            return;
+          }
+
+          console.log('Deribit: Processing orderbook data');
 
           onData({
             bids: book.bids.slice(0, 15).map(([p, s]: any[]) => ({ 
@@ -52,6 +65,11 @@ export class DeribitAdapter implements ExchangeAdapter {
           console.error('Deribit WebSocket error:', error);
         }
       },
+      (error) => {
+        console.error(`Deribit connection failed:`, error);
+        // For now, just log the error. In a real implementation, you might want to
+        // fall back to REST API calls or show a user-friendly error message.
+      }
     );
   }
 
