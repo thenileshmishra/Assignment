@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { OrderBookSnapshot } from '@/services/exchange/types';
 
 interface OrderBookImbalanceProps {
-  orderbook: OrderBookSnapshot;
+  orderbook: OrderBookSnapshot | null;
   levels?: number;
 }
 

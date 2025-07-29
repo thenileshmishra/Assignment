@@ -114,10 +114,15 @@ export class BybitAdapter implements ExchangeAdapter {
   private async startRestApiPolling(symbol: string, onData: (ob: OrderBookSnapshot) => void) {
     const pair = symbol.replace('-', '').toUpperCase();
     
+    console.log(`Bybit: Starting REST API polling for ${pair}`);
+    
     const fetchOrderbook = async () => {
       try {
-        const response = await fetch(`https://api.bybit.com/v5/market/orderbook?category=linear&symbol=${pair}&limit=50`);
+        console.log(`Bybit: Fetching orderbook from REST API for ${pair}`);
+        const response = await fetch(`/api/exchange?exchange=bybit&symbol=${encodeURIComponent(symbol)}`);
         const data = await response.json();
+        
+        console.log(`Bybit: REST API response:`, data);
         
         if (data.retCode === 0 && data.result) {
           const { b, a } = data.result;
@@ -132,7 +137,10 @@ export class BybitAdapter implements ExchangeAdapter {
             size: parseFloat(size) 
           }));
 
+          console.log(`Bybit: REST API sending orderbook data:`, { bids: bids.length, asks: asks.length });
           onData({ bids, asks, ts: Date.now() });
+        } else {
+          console.error(`Bybit: REST API error - retCode: ${data.retCode}, message: ${data.retMsg}`);
         }
       } catch (error) {
         console.error('Bybit REST API error:', error);
@@ -140,9 +148,11 @@ export class BybitAdapter implements ExchangeAdapter {
     };
 
     // Initial fetch
+    console.log(`Bybit: Performing initial REST API fetch`);
     await fetchOrderbook();
     
     // Poll every 2 seconds
+    console.log(`Bybit: Starting REST API polling interval`);
     this.#pollingInterval = setInterval(fetchOrderbook, 2000);
   }
 

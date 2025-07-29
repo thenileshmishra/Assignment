@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { OrderBookSnapshot } from '@/services/exchange/types';
 
 interface MarketDepthProps {
-  orderbook: OrderBookSnapshot;
+  orderbook: OrderBookSnapshot | null;
   maxLevels?: number;
 }
 

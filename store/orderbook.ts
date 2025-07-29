@@ -7,7 +7,7 @@ import { DeribitAdapter } from '@/services/exchange/deribit';
 import type { OrderBookSnapshot } from '@/services/exchange/types';
 
 type Venue = 'OKX' | 'BYBIT' | 'DERIBIT';
-type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
+type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error' | 'fallback';
 
 interface State {
   venue: Venue;
@@ -15,10 +15,13 @@ interface State {
   data: OrderBookSnapshot | null;
   connectionStatus: ConnectionStatus;
   error: string | null;
+  connectionType: 'websocket' | 'rest' | null;
+  isInitialized: boolean;
   connect: () => void;
   disconnect: () => void;
   setVenue: (v: Venue) => void;
   setSymbol: (s: string) => void;
+  initialize: () => void;
 }
 
 // singletons – create once, reuse
@@ -30,7 +33,7 @@ const adapters = {
 
 // Default symbols for each venue
 const defaultSymbols = {
-  OKX: 'BTC-USDT',
+  OKX: 'BTC-USDT', // Will be converted to BTCUSDT
   BYBIT: 'BTC-USDT', // Will be converted to BTCUSDT
   DERIBIT: 'BTC-USDT', // Will be converted to BTC-PERPETUAL
 };
@@ -45,10 +48,19 @@ export const useOrderbookStore = create<State>((set, get) => ({
   data: null,
   connectionStatus: 'disconnected',
   error: null,
+  connectionType: null,
+  isInitialized: false,
+
+  initialize() {
+    if (!get().isInitialized) {
+      set({ isInitialized: true });
+      get().connect();
+    }
+  },
 
   connect() {
     const { venue, symbol } = get();
-    set({ connectionStatus: 'connecting', error: null });
+    set({ connectionStatus: 'connecting', error: null, connectionType: null });
     
     try {
       adapters[venue].connect(symbol, (ob) => {
@@ -58,14 +70,24 @@ export const useOrderbookStore = create<State>((set, get) => ({
         }
         
         updateTimeout = setTimeout(() => {
-          set({ data: ob, connectionStatus: 'connected', error: null });
+          const currentStatus = get().connectionStatus;
+          const newStatus = currentStatus === 'connecting' ? 'connected' : 'fallback';
+          const connectionType = currentStatus === 'connecting' ? 'websocket' : 'rest';
+          
+          set({ 
+            data: ob, 
+            connectionStatus: newStatus, 
+            error: null,
+            connectionType 
+          });
         }, DEBOUNCE_DELAY);
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Connection failed';
       set({ 
         connectionStatus: 'error', 
-        error: `${venue} connection error: ${errorMessage}` 
+        error: `${venue} connection error: ${errorMessage}`,
+        connectionType: null
       });
     }
   },
@@ -77,7 +99,7 @@ export const useOrderbookStore = create<State>((set, get) => ({
       clearTimeout(updateTimeout);
       updateTimeout = null;
     }
-    set({ connectionStatus: 'disconnected', error: null });
+    set({ connectionStatus: 'disconnected', error: null, connectionType: null });
   },
 
   setVenue(v) {

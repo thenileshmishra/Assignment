@@ -6,17 +6,30 @@ export function createWsClient(
 ) {
   let ws: WebSocket;
   let reconnectAttempts = 0;
-  const maxReconnectAttempts = 3; // Reduced from 5 to 3
-  const reconnectDelay = 2000; // Increased from 1000 to 2000ms
+  const maxReconnectAttempts = 2; // Reduced to 2 attempts
+  const reconnectDelay = 1000; // Reduced to 1 second
+  let hasTriggeredFallback = false;
+  let connectionTimeout: NodeJS.Timeout;
 
   const connect = () => {
     try {
       console.log(`Attempting WebSocket connection to: ${url}`);
       ws = new WebSocket(url);
 
+      // Set a connection timeout
+      connectionTimeout = setTimeout(() => {
+        if (!hasTriggeredFallback && onError) {
+          console.log(`WebSocket connection timeout for ${url}, triggering fallback`);
+          hasTriggeredFallback = true;
+          onError(new Event('error'));
+        }
+      }, 5000); // 5 second timeout
+
       ws.addEventListener('open', () => {
         console.log(`WebSocket connected to ${url}`);
+        clearTimeout(connectionTimeout);
         reconnectAttempts = 0;
+        hasTriggeredFallback = false;
         console.log('Sending subscription message:', subscribeMsg);
         ws.send(JSON.stringify(subscribeMsg));
       });
@@ -34,7 +47,15 @@ export function createWsClient(
           isTrusted: e.isTrusted,
           timeStamp: e.timeStamp
         });
-        // Don't call onError for connection errors, let the close handler handle reconnection
+        
+        clearTimeout(connectionTimeout);
+        
+        // Trigger fallback immediately on first error
+        if (!hasTriggeredFallback && onError) {
+          console.log(`Triggering fallback for ${url} due to WebSocket error`);
+          hasTriggeredFallback = true;
+          onError(new Event('error'));
+        }
       });
 
       ws.addEventListener('close', (e) => {
@@ -45,30 +66,38 @@ export function createWsClient(
           type: e.type
         });
         
-        // Only attempt to reconnect for unexpected closures
-        if (e.code !== 1000 && e.code !== 1001 && reconnectAttempts < maxReconnectAttempts) {
+        clearTimeout(connectionTimeout);
+        
+        // Only attempt to reconnect for unexpected closures and if fallback hasn't been triggered
+        if (e.code !== 1000 && e.code !== 1001 && reconnectAttempts < maxReconnectAttempts && !hasTriggeredFallback) {
           reconnectAttempts++;
           console.log(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`);
           
           setTimeout(() => {
             connect();
           }, reconnectDelay * reconnectAttempts);
-        } else if (onError && reconnectAttempts >= maxReconnectAttempts) {
-          // Call onError only after all reconnection attempts fail
-          console.error(`All reconnection attempts failed for ${url}`);
+        } else if (onError && !hasTriggeredFallback) {
+          // Call onError if we haven't already triggered fallback
+          console.error(`WebSocket connection failed for ${url}, triggering fallback`);
+          hasTriggeredFallback = true;
           onError(new Event('error'));
         }
       });
 
     } catch (error) {
       console.error(`Failed to create WebSocket connection to ${url}:`, error);
-      if (onError) onError(new Event('error'));
+      clearTimeout(connectionTimeout);
+      if (onError && !hasTriggeredFallback) {
+        hasTriggeredFallback = true;
+        onError(new Event('error'));
+      }
     }
   };
 
   connect();
 
   return () => {
+    clearTimeout(connectionTimeout);
     if (ws) {
       console.log(`Closing WebSocket connection to ${url}`);
       ws.close(1000, 'normal-close');

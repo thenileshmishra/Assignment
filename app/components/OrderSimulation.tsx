@@ -24,7 +24,7 @@ interface OrderImpact {
 
 interface OrderSimulationProps {
   order: SimulatedOrder;
-  orderbook: OrderBookSnapshot;
+  orderbook: OrderBookSnapshot | null;
   onRemove: () => void;
   impact: OrderImpact | null;
 }
@@ -33,7 +33,7 @@ export default function OrderSimulation({ order, orderbook, onRemove, impact }: 
   const [isExpanded, setIsExpanded] = useState(false);
 
   const getOrderPosition = () => {
-    if (!order.price) return null; // Market orders don't have a specific position
+    if (!order.price || !orderbook) return null; // Market orders don't have a specific position
 
     const { side, price } = order;
     
@@ -137,7 +137,7 @@ export default function OrderSimulation({ order, orderbook, onRemove, impact }: 
       )}
 
       {/* Order Position Visualization */}
-      {!isMarketOrder && position !== null && (
+      {!isMarketOrder && position !== null && orderbook && (
         <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
