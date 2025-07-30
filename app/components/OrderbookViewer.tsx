@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useOrderbookStore } from '@/store/orderbook';
 import SimulationForm from './SimulationForm';
 import OrderSimulation from './OrderSimulation';
@@ -23,7 +23,8 @@ interface SimulatedOrder {
 export default function OrderbookViewer() {
   const { data, venue, symbol, connect, disconnect } = useOrderbookStore();
   const [simulatedOrders, setSimulatedOrders] = useState<SimulatedOrder[]>([]);
-  const [selectedVenue, setSelectedVenue] = useState(venue);
+  const prevBids = useRef<Level[]>([]);
+  const prevAsks = useRef<Level[]>([]);
 
   useEffect(() => {
     connect();
@@ -93,6 +94,22 @@ export default function OrderbookViewer() {
   // Find the price levels for simulated orders
   const simulatedOrderPrices = simulatedOrders.map(o => o.price).filter(Boolean);
 
+  // Always keep 15 levels, fill with previous data if needed
+  const getStableLevels = (levels: Level[], prev: React.MutableRefObject<Level[]>) => {
+    let stable = levels.slice(0, 15);
+    if (stable.length < 15) {
+      // Fill with previous data (skip duplicates by price)
+      const prevToAdd = prev.current.filter(
+        l => !stable.some(s => s.price === l.price)
+      ).slice(0, 15 - stable.length);
+      stable = [...stable, ...prevToAdd];
+    }
+    // Update previous
+    prev.current = stable;
+    return stable;
+  };
+
+  //  If data is not loaded from the API, show a loading spinner
   if (!data) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -100,6 +117,10 @@ export default function OrderbookViewer() {
       </div>
     );
   }
+
+  const stableAsks = getStableLevels(data.asks, prevAsks);
+  const stableBids = getStableLevels(data.bids, prevBids);
+
 
   return (
     <div className="max-w-7xl mx-auto p-4">
@@ -157,10 +178,8 @@ export default function OrderbookViewer() {
                       </tr>
                     </thead>
                     <tbody>
-                      {data.asks.slice(0, 15).map((level, index) => {
-                        const total = data.asks
-                          .slice(0, index + 1)
-                          .reduce((sum, l) => sum + l.size, 0);
+                      {stableAsks.map((level, index) => {
+                        const total = stableAsks.slice(0, index + 1).reduce((sum, l) => sum + l.size, 0);
                         const isSimOrder = simulatedOrderPrices.includes(level.price);
                         return (
                           <tr key={`ask-${level.price}`} className={clsx(
@@ -199,13 +218,14 @@ export default function OrderbookViewer() {
                       </tr>
                     </thead>
                     <tbody>
-                      {data.bids.slice(0, 15).map((level, index) => {
-                        const total = data.bids
-                          .slice(0, index + 1)
-                          .reduce((sum, l) => sum + l.size, 0);
-                        
+                      {stableBids.map((level, index) => {
+                        const total = stableBids.slice(0, index + 1).reduce((sum, l) => sum + l.size, 0);
+                        const isSimOrder = simulatedOrderPrices.includes(level.price);
                         return (
-                          <tr key={`bid-${level.price}`} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 orderbook-row">
+                          <tr key={`bid-${level.price}`} className={clsx(
+                            'border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 orderbook-row',
+                            isSimOrder ? 'bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-400' : ''
+                          )}>
                             <td className="px-4 py-2 text-green-600 font-mono text-sm orderbook-cell number-display">
                               {level.price.toFixed(2)}
                             </td>
