@@ -128,45 +128,21 @@ export default function OrderbookViewer() {
         {/* Order Simulation Form */}
         <div className="lg:col-span-1">
           <SimulationForm onSimulateOrder={addSimulatedOrder} />
-          
-          {/* Simulated Orders List */}
-          {simulatedOrders.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold mb-3">Simulated Orders</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {simulatedOrders.map(order => (
-                  <OrderSimulation
-                    key={order.id}
-                    order={order}
-                    orderbook={data}
-                    onRemove={() => removeSimulatedOrder(order.id)}
-                    impact={calculateOrderImpact(order, data)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Orderbook Display */}
         <div className="lg:col-span-2">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-            <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">
-                  {venue} - {symbol}
-                </h2>
-                <div className="text-sm text-gray-500">
-                  Last Update: {new Date(data.ts).toLocaleTimeString()}
-                </div>
-              </div>
+            <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold">
+                {venue} - {symbol} Orderbook
+              </h3>
             </div>
-
             <div className="grid grid-cols-2">
               {/* Asks (Sell Side) */}
               <div>
-                <div className="bg-red-50 dark:bg-red-900/20 px-4 py-2 border-b">
-                  <h3 className="text-red-600 font-semibold">Asks</h3>
+                <div className="px-4 py-2 bg-red-50 dark:bg-red-900/20 border-b border-gray-200 dark:border-gray-700">
+                  <h4 className="text-sm font-medium text-red-600">Asks (Sell)</h4>
                 </div>
                 <div className="max-h-96 overflow-y-auto">
                   <table className="w-full text-sm orderbook-table">
@@ -205,8 +181,8 @@ export default function OrderbookViewer() {
 
               {/* Bids (Buy Side) */}
               <div>
-                <div className="bg-green-50 dark:bg-green-900/20 px-4 py-2 border-b">
-                  <h3 className="text-green-600 font-semibold">Bids</h3>
+                <div className="px-4 py-2 bg-green-50 dark:bg-green-900/20 border-b border-gray-200 dark:border-gray-700">
+                  <h4 className="text-sm font-medium text-green-600">Bids (Buy)</h4>
                 </div>
                 <div className="max-h-96 overflow-y-auto">
                   <table className="w-full text-sm orderbook-table">
@@ -247,12 +223,43 @@ export default function OrderbookViewer() {
         </div>
       </div>
 
-      {/* Market Depth Visualization */}
+      {/* Market Depth and Order Simulation - Conditional Layout */}
       <div className="mt-6">
-        <MarketDepth orderbook={data} />
+        {simulatedOrders.length > 0 ? (
+          // When orders exist: 50/50 split
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Market Depth */}
+            <div>
+              <MarketDepth orderbook={data} />
+            </div>
+            
+            {/* Simulated Orders */}
+            <div>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                <h3 className="text-lg font-semibold mb-4">Simulated Orders</h3>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {simulatedOrders.map(order => (
+                    <OrderSimulation
+                      key={order.id}
+                      order={order}
+                      orderbook={data}
+                      onRemove={() => removeSimulatedOrder(order.id)}
+                      impact={calculateOrderImpact(order, data)}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          // When no orders: Market Depth at 100% width
+          <div>
+            {/* <MarketDepth orderbook={data} /> */}
+          </div>
+        )}
       </div>
 
-      {/* Order Book Imbalance */}
+      {/* Order Book Imbalance - Full width below */}
       <div className="mt-6">
         <OrderBookImbalance orderbook={data} />
       </div>
