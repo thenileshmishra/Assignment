@@ -47,7 +47,7 @@ A Next.js application that displays real-time orderbook data from multiple crypt
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/thenileshmishra/Assignment
    cd goquant-orderbook
    ```
 
@@ -144,12 +144,12 @@ Visualizes simulated orders with:
 - Color-coded status indicators
 - Expandable details view
 
-### MarketDepth
+<!-- ### MarketDepth
 Advanced market analysis with:
 - Cumulative volume visualization
 - Spread analysis
 - Market depth indicators
-- Real-time updates
+- Real-time updates -->
 
 ### OrderBookImbalance
 Trading indicators including:
@@ -192,27 +192,3 @@ The application includes comprehensive error handling:
 - **Memory Management**: Component unmounting cleanup
 - **Real-time Updates**: Optimized for live data streaming
 
-## Future Enhancements
-
-- **Additional Exchanges**: Support for more venues
-- **Advanced Charts**: Interactive price charts
-- **Order History**: Track simulated order performance
-- **Alerts**: Price and volume alerts
-- **Backtesting**: Historical order simulation
-- **Portfolio Management**: Multi-order tracking
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-This project is for educational and demonstration purposes.
-
----
-
-**Note**: This application is designed for educational purposes and order simulation. It does not execute real trades and should not be used for actual trading without proper risk management and compliance considerations.
